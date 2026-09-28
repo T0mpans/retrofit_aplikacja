@@ -1,6 +1,9 @@
 package com.example.retrofit_aplikacja;
 
+import static android.view.View.INVISIBLE;
+
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -28,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
     RadioGroup radioGroupPytania;
     TextView textViewTresc;
     List<Pytanie> pytaniaZInternetu;
+    int index = 0;
+    int ostatecznyWynik = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,17 +51,17 @@ public class MainActivity extends AppCompatActivity {
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         JsonPlaceHolder jsonPlaceHolder = retrofit.create(JsonPlaceHolder.class);
-        Call<List<Pytanie>>call = jsonPlaceHolder.getPytania();
+        Call<List<Pytanie>> call = jsonPlaceHolder.getPytania();
         call.enqueue(
                 new Callback<List<Pytanie>>() {
                     @Override
                     public void onResponse(Call<List<Pytanie>> call, Response<List<Pytanie>> response) {
-                        if (!response.isSuccessful()){
+                        if (!response.isSuccessful()) {
                             Toast.makeText(MainActivity.this, response.code(), Toast.LENGTH_SHORT).show();
                             return;
                         }
                         pytaniaZInternetu = response.body();
-                        textViewTresc.setText("Pytanie: "+pytaniaZInternetu.get(0).getTrescPytania());
+                        wypiszPytanie(0);
                     }
 
                     @Override
@@ -65,5 +70,59 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
         );
+        buttonNastepne.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (index < pytaniaZInternetu.size()) {
+
+                            if (radioButtonA.isChecked()) {
+                                if (pytaniaZInternetu.get(index).getPoprawna() == 0) {
+                                    Toast.makeText(MainActivity.this, "POPRAWNA", Toast.LENGTH_SHORT).show();
+                                    ostatecznyWynik++;
+                                } else {
+                                    Toast.makeText(MainActivity.this, "NIE POPRAWNA", Toast.LENGTH_SHORT).show();
+                                }
+                            } else if (radioButtonB.isChecked()) {
+                                if (pytaniaZInternetu.get(index).getPoprawna() == 1) {
+                                    Toast.makeText(MainActivity.this, "POPRAWNA", Toast.LENGTH_SHORT).show();
+                                    ostatecznyWynik++;
+                                } else {
+                                    Toast.makeText(MainActivity.this, "NIE POPRAWNA", Toast.LENGTH_SHORT).show();
+                                }
+                            } else if (radioButtonC.isChecked()) {
+                                if (pytaniaZInternetu.get(index).getPoprawna() == 2) {
+                                    Toast.makeText(MainActivity.this, "POPRAWNA", Toast.LENGTH_SHORT).show();
+                                    ostatecznyWynik++;
+                                } else {
+                                    Toast.makeText(MainActivity.this, "NIE POPRAWNA", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                            radioGroupPytania.clearCheck();
+                            boolean ekranKoncowy = false;
+                            if (index < pytaniaZInternetu.size() - 1) {
+                                index++;
+                                wypiszPytanie(index);
+                            } else {
+                                ekranKoncowy = true;
+                            }
+                            if (ekranKoncowy) {
+                                buttonNastepne.setVisibility(INVISIBLE);
+                                radioButtonA.setVisibility(INVISIBLE);
+                                radioButtonB.setVisibility(INVISIBLE);
+                                radioButtonC.setVisibility(INVISIBLE);
+                                textViewTresc.setText("Wynik: " + ostatecznyWynik);
+                            }
+                        }
+                    }
+                }
+        );
+    }
+
+    private void wypiszPytanie(int nrPytania) {
+        textViewTresc.setText(pytaniaZInternetu.get(nrPytania).getTrescPytania());
+        radioButtonA.setText(pytaniaZInternetu.get(nrPytania).getOdpA());
+        radioButtonB.setText(pytaniaZInternetu.get(nrPytania).getOdpB());
+        radioButtonC.setText(pytaniaZInternetu.get(nrPytania).getOdpC());
     }
 }
